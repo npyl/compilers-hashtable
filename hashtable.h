@@ -23,6 +23,7 @@ typedef struct hashtable_s hashtable_t;
 //
 
 hashtable_t*        ht_create(int size);
+void                ht_destroy(hashtable_t* hashtable);
 
 variable_t*         ht_variable(char* variable_name, char* value, int type, int scope);
 
@@ -30,5 +31,8 @@ void                ht_set(hashtable_t* hashtable, char* variable_name, char* va
 char*               ht_get(hashtable_t* hashtable, char* variable_name);
 
 int                 ht_hash(hashtable_t* hashtable, char* variable_name);
+
+int                 ht_variable_check_declared_in_scope(hashtable_t* hashtable, char* variable_name, int scope);
+void                ht_variable_delete_all_in_scope(hashtable_t* hashtable, int scope);
 
 #endif

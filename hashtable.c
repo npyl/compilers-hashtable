@@ -139,6 +139,39 @@ char* ht_get(hashtable_t *hashtable, char* variable_name)
         return pair->value;   
 }
 
+/*
+ * Priority should be given to scope = `scope`; scope = 0 (a.k.a. global) should be checked if first fails!
+ */
+int ht_variable_check_declared_in_scope(hashtable_t* hashtable, char* variable_name, int scope)
+{
+    return 0;
+}
+
+void ht_variable_delete_all_in_scope(hashtable_t* hashtable, int scope)
+{
+    for (int i = 0; i < hashtable->size; i++)
+    {
+        variable_t* previous = NULL;
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; cur = cur->next)
+        {
+            /* found variable of the specific scope; must remove and free() */
+            if (cur->scope == scope)
+            {
+                /* if previous is not the first node, attach to it the next of cur */
+                if (previous)
+                    previous->next = cur->next;
+                free(cur);
+            }
+            else
+                previous = cur;
+        }
+    }
+}
+
+void ht_destroy(hashtable_t* hashtable)
+{
+
+}
 
 int main( char *argc, char *argv ) {
 
