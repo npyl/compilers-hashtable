@@ -23,7 +23,7 @@ hashtable_t *ht_create( int size ) {
         }
 
         // Allocate pointers to the head nodes.
-        if( ( hashtable->table = malloc( sizeof( entry_t * ) * size ) ) == NULL ) {
+        if( ( hashtable->table = malloc( sizeof( variable_t * ) * size ) ) == NULL ) {
                 return NULL;
         }
         for( i = 0; i < size; i++ ) {
@@ -52,10 +52,10 @@ int ht_hash( hashtable_t *hashtable, char *key ) {
 }
 
 // Create a key-value pair.
-entry_t *ht_newpair( char *key, char *value ) {
-        entry_t *newpair;
+variable_t* ht_newpair( char *key, char *value ) {
+        variable_t* newpair;
 
-        if( ( newpair = malloc( sizeof( entry_t ) ) ) == NULL ) {
+        if( ( newpair = malloc( sizeof( variable_t ) ) ) == NULL ) {
                 return NULL;
         }
 
@@ -75,9 +75,9 @@ entry_t *ht_newpair( char *key, char *value ) {
 // Insert a key-value pair into a hash table. 
 void ht_set( hashtable_t *hashtable, char *key, char *value ) {
         int bin = 0;
-        entry_t *newpair = NULL;
-        entry_t *next = NULL;
-        entry_t *last = NULL;
+        variable_t *newpair = NULL;
+        variable_t *next = NULL;
+        variable_t *last = NULL;
 
         bin = ht_hash( hashtable, key );
 
@@ -118,7 +118,7 @@ void ht_set( hashtable_t *hashtable, char *key, char *value ) {
 // Retrieve a key-value pair from a hash table.
 char *ht_get( hashtable_t *hashtable, char *key ) {
         int bin = 0;
-        entry_t *pair;
+        variable_t *pair;
 
         bin = ht_hash( hashtable, key );
 
