@@ -10,132 +10,131 @@
 #include <string.h>
 
 // Create a new hashtable.
-hashtable_t *ht_create( int size ) {
+hashtable_t *ht_create(int size) 
+{
+    hashtable_t *hashtable = NULL;
+    int i;
 
-        hashtable_t *hashtable = NULL;
-        int i;
+    if (size < 1) return NULL;
 
-        if( size < 1 ) return NULL;
+    // Allocate the table itself.
+    if ((hashtable = malloc(sizeof(hashtable_t))) == NULL) 
+        return NULL;
+    
+    // Allocate pointers to the head nodes.
+    if ((hashtable->table = malloc(sizeof(variable_t*) * size)) == NULL) 
+        return NULL;
 
-        // Allocate the table itself.
-        if( ( hashtable = malloc( sizeof( hashtable_t ) ) ) == NULL ) {
-                return NULL;
-        }
+    for (i = 0; i < size; i++)
+        hashtable->table[i] == NULL;
 
-        // Allocate pointers to the head nodes.
-        if( ( hashtable->table = malloc( sizeof( variable_t * ) * size ) ) == NULL ) {
-                return NULL;
-        }
-        for( i = 0; i < size; i++ ) {
-                hashtable->table[i] == NULL;
-        }
+    hashtable->size = size;
 
-        hashtable->size = size;
-
-        return hashtable;
+    return hashtable;
 }
 
 // Hash a string for a particular hash table.
-int ht_hash( hashtable_t *hashtable, char *variable_name ) {
+int ht_hash(hashtable_t* hashtable, char* variable_name) 
+{
+    unsigned long int hashval;
+    int i = 0;
 
-        unsigned long int hashval;
-        int i = 0;
+    // Convert our string to an integer
+    while (hashval < ULONG_MAX && i < strlen(variable_name)) 
+    {
+        hashval = hashval << 8;
+        hashval += variable_name[ i ];
+        i++;
+    }
 
-        // Convert our string to an integer
-        while( hashval < ULONG_MAX && i < strlen( variable_name ) ) {
-                hashval = hashval << 8;
-                hashval += variable_name[ i ];
-                i++;
-        }
-
-        return hashval % hashtable->size;
+    return hashval % hashtable->size;
 }
 
 // Create a variable
-variable_t* ht_variable(char* variable_name, char* value, int type, int scope) {
-        variable_t* newpair;
+variable_t* ht_variable(char* variable_name, char* value, int type, int scope)
+{
+    variable_t* new_variable;
 
-        if( ( newpair = malloc( sizeof( variable_t ) ) ) == NULL ) {
-                return NULL;
-        }
+    if ((new_variable = malloc(sizeof(variable_t))) == NULL)
+        return NULL;
 
-        if( ( newpair->variable_name = strdup( variable_name ) ) == NULL ) {
-                return NULL;
-        }
+    if ((new_variable->variable_name = strdup(variable_name)) == NULL)
+        return NULL;
 
-        if( ( newpair->value = strdup( value ) ) == NULL ) {
-                return NULL;
-        }
+    if ((new_variable->value = strdup(value)) == NULL ) 
+        return NULL;
 
-        newpair->next = NULL;
+    new_variable->next = NULL;
 
-        return newpair;
+    return new_variable;
 }
 
 // Insert a variable into a hash table. 
-void ht_set( hashtable_t *hashtable, char *variable_name, char *value ) {
-        int bin = 0;
-        variable_t *newpair = NULL;
-        variable_t *next = NULL;
-        variable_t *last = NULL;
+void ht_set(hashtable_t *hashtable, char* variable_name, char* value) 
+{
+    int bin = 0;
+    variable_t* new_variable = NULL;
+    variable_t* next = NULL;
+    variable_t* last = NULL;
 
-        bin = ht_hash( hashtable, variable_name );
+    bin = ht_hash( hashtable, variable_name );
 
-        next = hashtable->table[ bin ];
+    next = hashtable->table[ bin ];
 
-        while( next != NULL && next->variable_name != NULL && strcmp( variable_name, next->variable_name ) > 0 ) {
-                last = next;
-                next = next->next;
-        }
+    while( next != NULL && next->variable_name != NULL && strcmp( variable_name, next->variable_name ) > 0 ) {
+        last = next;
+        next = next->next;
+    }
 
-        // There's already a pair.  Let's replace that string.
-        if( next != NULL && next->variable_name != NULL && strcmp( variable_name, next->variable_name ) == 0 ) {
+    // There's already a pair.  Let's replace that string.
+    if( next != NULL && next->variable_name != NULL && strcmp( variable_name, next->variable_name ) == 0 ) {
 
-                free( next->value );
-                next->value = strdup( value );
+        free( next->value );
+        next->value = strdup( value );
 
         // Nope, could't find it.  Time to grow a pair.
-        } else {
-                newpair = ht_variable( variable_name, value, 0, 0);
+    } 
+    else 
+    {
+        new_variable = ht_variable( variable_name, value, 0, 0);
 
-                // We're at the start of the linked list in this bin.
-                if( next == hashtable->table[ bin ] ) {
-                        newpair->next = next;
-                        hashtable->table[ bin ] = newpair;
-        
-                // We're at the end of the linked list in this bin.
-                } else if ( next == NULL ) {
-                        last->next = newpair;
-        
-                // We're in the middle of the list.
-                } else  {
-                        newpair->next = next;
-                        last->next = newpair;
-                }
+        // We're at the start of the linked list in this bin.
+        if( next == hashtable->table[ bin ] ) {
+            new_variable->next = next;
+            hashtable->table[ bin ] = new_variable;
+
+        // We're at the end of the linked list in this bin.
+        } else if ( next == NULL ) {
+            last->next = new_variable;
+
+        // We're in the middle of the list.
+        } else  {
+            new_variable->next = next;
+            last->next = new_variable;
         }
+    }
 }
 
 // Retrieve a variable_name-value pair from a hash table.
-char *ht_get( hashtable_t *hashtable, char *variable_name ) {
-        int bin = 0;
-        variable_t *pair;
+char* ht_get(hashtable_t *hashtable, char* variable_name) 
+{
+    int bin = 0;
+    variable_t* pair;
 
-        bin = ht_hash( hashtable, variable_name );
+    bin = ht_hash(hashtable, variable_name);
 
-        // Step through the bin, looking for our value.
-        pair = hashtable->table[ bin ];
-        while( pair != NULL && pair->variable_name != NULL && strcmp( variable_name, pair->variable_name ) > 0 ) {
-                pair = pair->next;
-        }
+    // Step through the bin, looking for our value.
+    pair = hashtable->table[bin];
+    while (pair != NULL && pair->variable_name != NULL && strcmp(variable_name, pair->variable_name ) > 0) 
+    {
+        pair = pair->next;
+    }
 
-        // Did we actually find anything?
-        if( pair == NULL || pair->variable_name == NULL || strcmp( variable_name, pair->variable_name ) != 0 ) {
-                return NULL;
-
-        } else {
-                return pair->value;
-        }
-        
+    // Did we actually find anything?
+    if (pair == NULL || pair->variable_name == NULL || strcmp(variable_name, pair->variable_name) != 0)
+            return NULL;
+    else 
+        return pair->value;   
 }
 
 
