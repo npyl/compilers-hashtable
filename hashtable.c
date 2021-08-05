@@ -70,7 +70,7 @@ variable_t* ht_variable(char* variable_name, char* value, int type, int scope)
 }
 
 // Insert a variable into a hash table. 
-void ht_set(hashtable_t *hashtable, char* variable_name, char* value) 
+void ht_set(hashtable_t *hashtable, char* variable_name, char* value, int type, int scope)
 {
     int bin = 0;
     variable_t* new_variable = NULL;
@@ -91,12 +91,14 @@ void ht_set(hashtable_t *hashtable, char* variable_name, char* value)
 
         free( next->value );
         next->value = strdup( value );
+        next->type = type;
+        next->scope = scope;
 
         // Nope, could't find it.  Time to grow a pair.
     } 
     else 
     {
-        new_variable = ht_variable( variable_name, value, 0, 0);
+        new_variable = ht_variable( variable_name, value, type, scope);
 
         // We're at the start of the linked list in this bin.
         if( next == hashtable->table[ bin ] ) {
@@ -142,10 +144,10 @@ int main( char *argc, char *argv ) {
 
     hashtable_t *hashtable = ht_create( 65536 );
 
-    ht_set( hashtable, "variable_name1", "inky" );
-    ht_set( hashtable, "variable_name2", "pinky" );
-    ht_set( hashtable, "variable_name3", "blinky" );
-    ht_set( hashtable, "variable_name4", "floyd" );
+    ht_set( hashtable, "variable_name1", "inky", 0, 0 );
+    ht_set( hashtable, "variable_name2", "pinky", 0, 0 );
+    ht_set( hashtable, "variable_name3", "blinky", 0, 0 );
+    ht_set( hashtable, "variable_name4", "floyd", 0, 0 );
 
     printf( "%s\n", ht_get( hashtable, "variable_name1" ) );
     printf( "%s\n", ht_get( hashtable, "variable_name2" ) );

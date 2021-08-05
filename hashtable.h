@@ -4,6 +4,8 @@
 struct variable_s {
         char* variable_name;
         char* value;
+        int type;
+        int scope;
         struct variable_s* next;
 };
 
@@ -21,9 +23,12 @@ typedef struct hashtable_s hashtable_t;
 //
 
 hashtable_t*        ht_create(int size);
-int                 ht_hash(hashtable_t* hashtable, char* key);
+
 variable_t*         ht_variable(char* variable_name, char* value, int type, int scope);
-void                ht_set(hashtable_t* hashtable, char* key, char* value);
-char*               ht_get(hashtable_t* hashtable, char* key);
+
+void                ht_set(hashtable_t* hashtable, char* variable_name, char* value, int type, int scope);
+char*               ht_get(hashtable_t* hashtable, char* variable_name);
+
+int                 ht_hash(hashtable_t* hashtable, char* variable_name);
 
 #endif
