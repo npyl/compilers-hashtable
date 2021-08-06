@@ -26,7 +26,7 @@ hashtable_t *ht_create(int size)
         return NULL;
 
     for (i = 0; i < size; i++)
-        hashtable->table[i] == NULL;
+        hashtable->table[i] = NULL;
 
     hashtable->size = size;
 
@@ -63,6 +63,9 @@ variable_t* ht_variable(char* variable_name, char* value, int type, int scope)
 
     if ((new_variable->value = strdup(value)) == NULL ) 
         return NULL;
+
+    new_variable->type = type;
+    new_variable->scope = scope;
 
     new_variable->next = NULL;
 
@@ -121,22 +124,22 @@ void ht_set(hashtable_t *hashtable, char* variable_name, char* value, int type, 
 char* ht_get(hashtable_t *hashtable, char* variable_name) 
 {
     int bin = 0;
-    variable_t* pair;
+    variable_t* cur;
 
     bin = ht_hash(hashtable, variable_name);
 
     // Step through the bin, looking for our value.
-    pair = hashtable->table[bin];
-    while (pair != NULL && pair->variable_name != NULL && strcmp(variable_name, pair->variable_name ) > 0) 
+    cur = hashtable->table[bin];
+    while (cur != NULL && cur->variable_name != NULL && strcmp(variable_name, cur->variable_name ) > 0) 
     {
-        pair = pair->next;
+        cur = cur->next;
     }
 
     // Did we actually find anything?
-    if (pair == NULL || pair->variable_name == NULL || strcmp(variable_name, pair->variable_name) != 0)
+    if (cur == NULL || cur->variable_name == NULL || strcmp(variable_name, cur->variable_name) != 0)
             return NULL;
     else 
-        return pair->value;   
+        return cur->value;   
 }
 
 /*
@@ -144,6 +147,29 @@ char* ht_get(hashtable_t *hashtable, char* variable_name)
  */
 int ht_variable_check_declared_in_scope(hashtable_t* hashtable, char* variable_name, int scope)
 {
+    /* check first within given scope */
+    for (int i = 0; i < hashtable->size; i++)
+    {
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; cur = cur->next)
+        {
+            if (cur->scope == scope && (strcmp(cur->variable_name, variable_name) == 0))
+                return 1;
+        }
+    }
+
+    printf("Checking scope 0\n");
+
+    /* reaching here means we didn't find anything; so check in global scope */
+    int global_scope = 0;
+    for (int i = 0; i < hashtable->size; i++)
+    {
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; cur = cur->next)
+        {
+            if (cur->scope == global_scope && (strcmp(cur->variable_name, variable_name) == 0))
+                return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -152,40 +178,91 @@ void ht_variable_delete_all_in_scope(hashtable_t* hashtable, int scope)
     for (int i = 0; i < hashtable->size; i++)
     {
         variable_t* previous = NULL;
-        for (variable_t* cur = hashtable->table[i]; cur != NULL; cur = cur->next)
+
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; )
         {
             /* found variable of the specific scope; must remove and free() */
             if (cur->scope == scope)
             {
+                variable_t* temp;
+
                 /* if previous is not the first node, attach to it the next of cur */
                 if (previous)
                     previous->next = cur->next;
-                free(cur);
+
+                temp = cur;
+                cur = cur->next;
+                free(temp);
             }
             else
+            {
                 previous = cur;
+                cur = cur->next;
+            }
         }
     }
 }
 
 void ht_destroy(hashtable_t* hashtable)
 {
+    for (int i = 0; i < hashtable->size; i++)
+    {
+        variable_t* previous = NULL;
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; )
+        {
+            previous = cur;
+            cur = cur->next;
+            free(previous);
+        }
+    }
 
+    free(hashtable);
+}
+
+void ht_print(hashtable_t* hashtable)
+{
+    for (int i = 0; i < hashtable->size; i++)
+    {
+        for (variable_t* cur = hashtable->table[i]; cur != NULL; cur = cur->next)
+        {
+            printf("%s = %s (scope = %i)\n", cur->variable_name, cur->value, cur->scope);
+        }
+    }
 }
 
 int main( char *argc, char *argv ) {
 
-    hashtable_t *hashtable = ht_create( 65536 );
+    hashtable_t *hashtable = ht_create( 10 );
 
     ht_set( hashtable, "variable_name1", "inky", 0, 0 );
-    ht_set( hashtable, "variable_name2", "pinky", 0, 0 );
-    ht_set( hashtable, "variable_name3", "blinky", 0, 0 );
+    ht_set( hashtable, "variable_name2", "pinky", 0, 1 );
+    ht_set( hashtable, "variable_name3", "blinky", 0, 1 );
     ht_set( hashtable, "variable_name4", "floyd", 0, 0 );
 
-    printf( "%s\n", ht_get( hashtable, "variable_name1" ) );
-    printf( "%s\n", ht_get( hashtable, "variable_name2" ) );
-    printf( "%s\n", ht_get( hashtable, "variable_name3" ) );
-    printf( "%s\n", ht_get( hashtable, "variable_name4" ) );
+    // scopes
+    ht_set( hashtable, "x", "10", 0, 0 );   // int x = 10; global scope
+    ht_set( hashtable, "y", "11", 0, 1 );   // int y = 11; other scope
+
+    // check if we can find x in scope 1
+    int res0 = ht_variable_check_declared_in_scope(hashtable, "x", 1);
+    printf("Found x? %i\n", res0);
+    // check if we can find y in scope 1; this should be easy
+    int res1 = ht_variable_check_declared_in_scope(hashtable, "y", 1);
+    printf("Found y? %i\n", res1);
+
+    ht_print(hashtable);
+
+    ht_variable_delete_all_in_scope(hashtable, 1);
+
+    printf("after\n");
+    ht_print(hashtable);
+
+    ht_destroy(hashtable);
+
+    // printf( "%s\n", ht_get( hashtable, "variable_name1" ) );
+    // printf( "%s\n", ht_get( hashtable, "variable_name2" ) );
+    // printf( "%s\n", ht_get( hashtable, "variable_name3" ) );
+    // printf( "%s\n", ht_get( hashtable, "variable_name4" ) );
 
     return 0;
 }

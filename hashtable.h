@@ -35,4 +35,6 @@ int                 ht_hash(hashtable_t* hashtable, char* variable_name);
 int                 ht_variable_check_declared_in_scope(hashtable_t* hashtable, char* variable_name, int scope);
 void                ht_variable_delete_all_in_scope(hashtable_t* hashtable, int scope);
 
+void                ht_print(hashtable_t* hashtable);
+
 #endif
